@@ -22,7 +22,7 @@ headers = {
     "X-Requested-With": "XMLHttpRequest",
     "Origin": "https://vietlott.vn",
     "Connection": "keep-alive",
-    "Referer": "https://vietlott.vn/vi/trung-thuong/ket-qua-trung-thuong/winning-number-645",
+    "Referer": "https://vietlott.vn/vi/trung-thuong/ket-qua-trung-thuong/655.html",
     "Sec-Fetch-Dest": "empty",
     "Sec-Fetch-Mode": "cors",
     "Sec-Fetch-Site": "same-origin",
