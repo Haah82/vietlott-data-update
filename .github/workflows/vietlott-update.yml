@@ -1,0 +1,71 @@
+name: Vietlott Automation Update
+
+on:
+  schedule:
+    # 19:30 Vietnam time (UTC+7) = 12:30 UTC
+    - cron: '30 12 * * *'
+  workflow_dispatch: # Kích hoạt thủ công qua giao diện GitHub
+
+permissions:
+  contents: write # Quyền bắt buộc để push dữ liệu vào branch main
+
+jobs:
+  update-lottery:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Install Dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Run Data Update Script
+        run: |
+          set -e
+          export PYTHONPATH=src
+          # Danh sách sản phẩm Vietlott hỗ trợ theo cấu trúc repo
+          for product in keno power_655 power_645 power_535 3d 3d_pro bingo18; do
+            echo "Processing product: $product"
+            uv run python src/vietlott/cli/crawl.py "$product"
+          done
+        env:
+          LOGURU_LEVEL: INFO
+
+      - name: Validate JSON Output
+        run: |
+          # Đảm bảo JSON không bị lỗi cấu trúc
+          if [ -d "data" ]; then
+            for file in data/*.json; do
+              [ -e "$file" ] || continue
+              jq . "$file" > /dev/null || (echo "Invalid JSON file: $file" && exit 1)
+            done
+          fi
+
+      - name: Commit and Push Changes
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Chỉ add file trong thư mục data
+          git add data/*.json
+          
+          if git diff --staged --quiet; then
+            echo "No changes in lottery data. Skipping push."
+          else
+            git commit -m "chore(data): auto-update vietlott results $(date +'%Y-%m-%d')"
+            git push origin main
+          fi
