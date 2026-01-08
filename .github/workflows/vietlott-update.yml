@@ -45,11 +45,12 @@ jobs:
           export PYTHONPATH=src
           # Danh sách sản phẩm Vietlott hỗ trợ theo cấu trúc repo
           for product in keno power_655 power_645 power_535 3d 3d_pro bingo18; do
-            echo "Processing product: $product"
+            echo "--- Starting crawl for $product ---"
             uv run python src/vietlott/cli/crawl.py "$product"
+            echo "--- Finished crawl for $product ---"
           done
         env:
-          LOGURU_LEVEL: INFO
+          LOGURU_LEVEL: DEBUG
 
       - name: Validate JSON Output
         run: |
