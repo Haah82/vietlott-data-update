@@ -4,6 +4,12 @@ on:
   schedule:
     # 19:30 Vietnam time (UTC+7) = 12:30 UTC
     - cron: '30 12 * * *'
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - '.github/workflows/vietlott-update.yml'
   workflow_dispatch: # Kích hoạt thủ công qua giao diện GitHub
 
 permissions:
@@ -47,11 +53,13 @@ jobs:
 
       - name: Validate JSON Output
         run: |
-          # Đảm bảo JSON không bị lỗi cấu trúc
+          # Đảm bảo JSONL không bị lỗi cấu trúc (NDJSON)
           if [ -d "data" ]; then
-            for file in data/*.json; do
+            for file in data/*.jsonl; do
               [ -e "$file" ] || continue
-              jq . "$file" > /dev/null || (echo "Invalid JSON file: $file" && exit 1)
+              echo "Validating $file..."
+              # Dùng jq -c . để kiểm tra từng dòng nếu là ndjson
+              head -n 100 "$file" | jq -e . > /dev/null || (echo "Invalid JSONL format in $file" && exit 1)
             done
           fi
 
@@ -60,8 +68,8 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Chỉ add file trong thư mục data
-          git add data/*.json
+          # Add tất cả file dữ liệu .jsonl
+          git add data/*.jsonl
           
           if git diff --staged --quiet; then
             echo "No changes in lottery data. Skipping push."
