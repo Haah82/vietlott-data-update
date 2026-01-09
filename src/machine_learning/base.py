@@ -83,8 +83,59 @@ class PredictModel:
             "count_correct_num": self.df_backtest_evaluate.value_counts(PredictModel.col_correct_num),
         }
 
+    def get_distribution_stats(self):
+        """Analyze the probability distribution of drawn numbers."""
+        all_results = self.df[self.col_result].explode()
+        stats = all_results.value_counts().sort_index()
+        total_draws = len(self.df)
+        
+        # Expected frequency if perfectly random (Uniform distribution)
+        expected_freq = (total_draws * self.number_predict) / (self.max_val - self.min_val + 1)
+        
+        df_stats = pd.DataFrame({
+            "number": stats.index,
+            "actual_freq": stats.values,
+            "expected_freq": expected_freq,
+            "deviation": stats.values - expected_freq,
+            "relative_freq": stats.values / (total_draws * self.number_predict)
+        })
+        return df_stats
+
     def revenue(self):
         cost = len(self.df_backtest_evaluate) * self.ticket_price
         gain = self.df_backtest_evaluate[PredictModel.col_correct_num].map(self.prices).fillna(0).astype(int).sum()
 
         return cost, gain, gain - cost
+
+    def run_monte_carlo(self, n_simulations=1000, n_draws=100):
+        """
+        Run Monte Carlo simulations to evaluate the risk-weighted outcomes.
+        """
+        import numpy as np
+        import random
+        
+        profits = []
+        for _ in range(n_simulations):
+            sim_profit = 0
+            for _ in range(n_draws):
+                daily_cost = self.time_predict * self.ticket_price
+                sim_profit -= daily_cost
+                
+                draw = random.sample(range(self.min_val, self.max_val + 1), self.number_predict)
+                predictions = [self.predict(None) for _ in range(self.time_predict)]
+                
+                for pred in predictions:
+                    _, num_correct = self._compare_list(draw, pred)
+                    if num_correct in self.prices:
+                        sim_profit += self.prices[num_correct]
+            
+            profits.append(sim_profit)
+            
+        profits = np.array(profits)
+        return {
+            "mean_profit": float(profits.mean()),
+            "std_profit": float(profits.std()),
+            "prob_of_profit": float((profits > 0).mean()),
+            "max_profit": float(profits.max()),
+            "min_profit": float(profits.min())
+        }

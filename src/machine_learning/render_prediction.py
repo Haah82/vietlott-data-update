@@ -15,6 +15,9 @@ from loguru import logger
 
 from machine_learning.base import PredictModel
 from machine_learning.random_strategy import RandomModel
+from machine_learning.frequency import FrequencyStrategy
+from machine_learning.pattern import PatternStrategy
+from machine_learning.probabilistic import BayesianInferenceStrategy, PoissonGapStrategy
 from vietlott.config.products import get_config
 
 
@@ -100,7 +103,19 @@ class PredictionSummaryGenerator:
         date_min = df_eval["date"].min()
         date_max = df_eval["date"].max()
 
-        return f"""### 🎲 {strategy_name}
+        # Monte Carlo Simulation
+        mc_results = model.run_monte_carlo(n_simulations=100, n_draws=50) # Smaller for speed
+        mc_report = f"""
+#### Monte Carlo Analysis (100 sims x 50 draws)
+| Metric | Value |
+|--------|-------|
+| Mean Profit | {mc_results['mean_profit']:,} VND |
+| Prob. of Profit | {mc_results['prob_of_profit']:.2%} |
+| Std Deviation | {mc_results['std_profit']:,} VND |
+"""
+
+        return f"""### {strategy_name}
+{mc_report}
 
 #### Configuration
 | Parameter | Value |
@@ -144,12 +159,24 @@ class PredictionSummaryGenerator:
             df_pd = df.to_pandas()
             reports = []
 
-            # Random Strategy
+            # Strategy configurations
             tickets_per_day = 20
-            random_model = RandomModel(df_pd, tickets_per_day)
-            random_model.backtest()
-            random_model.evaluate()
-            reports.append(self._generate_strategy_report(random_model, "Random Strategy", tickets_per_day))
+            
+            strategies = [
+                (RandomModel, "🎲 Random Strategy", {}),
+                (FrequencyStrategy, "🔥 Frequency (Hot)", {"strategy_type": "hot"}),
+                (FrequencyStrategy, "❄️ Frequency (Cold)", {"strategy_type": "cold"}),
+                (PatternStrategy, "🧩 Pattern Analysis", {}),
+                (BayesianInferenceStrategy, "📊 Bayesian Inference", {}),
+                (PoissonGapStrategy, "⏳ Poisson Gap (Overdue)", {}),
+            ]
+
+            for strategy_class, name, params in strategies:
+                logger.info(f"Running backtest for {name}...")
+                model = strategy_class(df_pd, time_predict=tickets_per_day, **params)
+                model.backtest()
+                model.evaluate()
+                reports.append(self._generate_strategy_report(model, name, tickets_per_day))
 
             return f"""## 🔮 Prediction Models
 

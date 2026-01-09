@@ -64,18 +64,29 @@ jobs:
             done
           fi
 
+      - name: Update README and Predictions
+        run: |
+          export PYTHONPATH=src
+          echo "--- Generating prediction summaries ---"
+          uv run python src/machine_learning/render_prediction.py
+          echo "--- Updating root README with visualizations ---"
+          uv run python src/render_readme.py
+
       - name: Commit and Push Changes
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Add tất cả file dữ liệu .jsonl
+          # Add all data, docs, and assets
           git add data/*.jsonl
+          git add readme.md
+          git add src/machine_learning/prediction_summary.md
+          git add assets/images/*.png
           
           if git diff --staged --quiet; then
-            echo "No changes in lottery data. Skipping push."
+            echo "No changes in data or reports. Skipping push."
           else
-            git commit -m "chore(data): auto-update vietlott results $(date +'%Y-%m-%d')"
+            git commit -m "chore(auto): update data, readme and predictions $(date +'%Y-%m-%d')"
             git pull --rebase origin main
             git push origin main
           fi
