@@ -6,7 +6,6 @@ on:
       - main
     paths-ignore:
       - 'data/**'
-      - 'README.md'
       - '.github/workflows/crawl.yaml'
   workflow_dispatch:
 
