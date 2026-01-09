@@ -55,6 +55,10 @@ class FrequencyStrategy(PredictModel):
         Returns:
             Dictionary mapping number to frequency count
         """
+        # Safety guard for null dates
+        if target_date is None or pd.isna(target_date):
+            return {num: 0 for num in range(self.min_val, self.max_val + 1)}
+
         start_date = target_date - timedelta(days=self.lookback_days)
 
         # Filter data for the lookback period

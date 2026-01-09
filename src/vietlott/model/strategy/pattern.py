@@ -53,6 +53,14 @@ class PatternStrategy(PredictModel):
         Returns:
             Dictionary containing spacing analysis
         """
+        # Safety guard for null dates
+        if target_date is None or pd.isna(target_date):
+            return {
+                "common_spacings": [],
+                "avg_spacing": 1,
+                "spacing_patterns": [],
+            }
+
         start_date = target_date - timedelta(days=self.lookback_days)
         mask = (self.df_sorted["date"] >= start_date) & (self.df_sorted["date"] < target_date)
         relevant_data = self.df_sorted[mask]
@@ -87,6 +95,10 @@ class PatternStrategy(PredictModel):
         Returns:
             Dictionary containing range distribution analysis
         """
+        # Safety guard for null dates
+        if target_date is None or pd.isna(target_date):
+            return {"range_counts": {}, "total_counts": 0}
+
         start_date = target_date - timedelta(days=self.lookback_days)
         mask = (self.df_sorted["date"] >= start_date) & (self.df_sorted["date"] < target_date)
         relevant_data = self.df_sorted[mask]

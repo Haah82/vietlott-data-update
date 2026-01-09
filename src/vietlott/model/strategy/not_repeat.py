@@ -56,6 +56,10 @@ class NotRepeatStrategy(PredictModel):
         Returns:
             Set of recently drawn numbers
         """
+        # Safety guard for null dates
+        if target_date is None or pd.isna(target_date):
+            return set()
+
         recent_numbers = set()
         start_date = target_date - timedelta(days=self.lookback_days)
 
