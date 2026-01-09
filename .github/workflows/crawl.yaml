@@ -59,8 +59,8 @@ jobs:
             for file in data/*.jsonl; do
               [ -e "$file" ] || continue
               echo "Validating $file..."
-              # Dùng jq -c . để kiểm tra từng dòng nếu là ndjson
-              head -n 100 "$file" | jq -e . > /dev/null || (echo "Invalid JSONL format in $file" && exit 1)
+              # Dùng jq để kiểm tra từng dòng (NDJSON)
+              jq -c . "$file" | head -n 100 > /dev/null || (echo "Invalid JSONL format in $file" && exit 1)
             done
           fi
 
@@ -76,5 +76,6 @@ jobs:
             echo "No changes in lottery data. Skipping push."
           else
             git commit -m "chore(data): auto-update vietlott results $(date +'%Y-%m-%d')"
+            git pull --rebase origin main
             git push origin main
           fi
