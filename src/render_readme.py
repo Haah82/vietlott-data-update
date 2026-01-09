@@ -17,10 +17,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import itertools
 from collections import Counter
+import pandas as pd
 
 matplotlib.use("Agg")  # For headless environments like GitHub Actions
 
 from vietlott.config.products import get_config
+from machine_learning.frequency import FrequencyStrategy
+from machine_learning.pattern import PatternStrategy
+from machine_learning.probabilistic import PoissonGapStrategy
 
 
 class ReadmeTemplates:
@@ -72,6 +76,7 @@ class ReadmeTemplates:
 - [📈 Max 3D Analysis](#-max-3d-analysis)
 - [📈 Max 3D Pro Analysis](#-max-3d-pro-analysis)
 - [🏆 Top Probability Summary](#-top-probability-summary)
+- [📈 Top Backtest Summary](#-top-backtest-summary-machine-learning)
 - [⚙️ How It Works](#️-how-it-works)
 - [🚀 Installation & Usage](#-installation--usage)
 - [📄 License](#-license)
@@ -428,8 +433,12 @@ class ReadmeGenerator:
         """Generate a summary of top 10 highest probability numbers across products."""
         summary_rows = []
         
-        for name, stats in product_stats.items():
-            if stats.is_empty():
+        # Enforce specific product order
+        product_order = ["Power 6/55", "Power 6/45", "Max 3D Plus", "Max 3D Pro"]
+        
+        for name in product_order:
+            stats = product_stats.get(name)
+            if stats is None or stats.is_empty():
                 continue
             
             top_10 = stats.head(10).to_dicts()
@@ -444,12 +453,119 @@ class ReadmeGenerator:
         if not summary_rows:
             return ""
             
-        df_summary = pl.DataFrame(summary_rows).sort(["Rank", "Product"])
+        df_summary = pl.DataFrame(summary_rows)
         md = df_to_markdown(df_summary)
         
         return f"""## 🏆 Top Probability Summary
 
 This table shows the top 10 most frequent results (highest weights) for each major product.
+
+{md}
+"""
+
+    def _calculate_ml_stats(self, df: pl.DataFrame, product_name: str) -> pl.DataFrame:
+        """Run ML strategies and return frequency of predicted numbers."""
+        if df.is_empty():
+            return pl.DataFrame()
+
+        # Determine config based on product name
+        if "6/55" in product_name:
+            min_val, max_val = 1, 55
+        elif "6/45" in product_name:
+            min_val, max_val = 1, 45
+        elif "3D" in product_name:
+            min_val, max_val = 0, 999
+        else:
+            return pl.DataFrame()
+
+        try:
+            # Convert to pandas for strategies
+            df_pd = df.to_pandas()
+            
+            # For 3D we need to flatten the result if it's a dict
+            if len(df_pd) > 0 and isinstance(df_pd["result"].iloc[0], dict):
+                df_pd["result"] = df_pd["result"].apply(lambda d: list(itertools.chain.from_iterable(d.values())))
+
+            # Run on a limited subset to save time (last 30 draws for backtest summary)
+            df_pd_subset = df_pd.head(30)
+            
+            all_predictions = []
+            # Using basic strategies for speed and relevance
+            strategies = [
+                (FrequencyStrategy, {"strategy_type": "hot"}),
+                (PatternStrategy, {}),
+            ]
+            
+            for strategy_class, params in strategies:
+                try:
+                    # Initialize model
+                    model = strategy_class(df_pd_subset, time_predict=5, min_val=min_val, max_val=max_val, **params)
+                    
+                    # Run backtest to gather prediction samples
+                    model.backtest()
+                    model.evaluate()
+                    
+                    if model.df_backtest_evaluate is not None and not model.df_backtest_evaluate.empty:
+                        # Extract predicted numbers
+                        preds = model.df_backtest_evaluate["predicted"].explode().tolist()
+                        all_predictions.extend(preds)
+                except Exception as e:
+                    logger.debug(f"Error running strategy {strategy_class.__name__} for {product_name}: {e}")
+
+            if not all_predictions:
+                return pl.DataFrame()
+
+            # Format specifically for 3D or Power
+            if "3D" in product_name:
+                formatted_preds = [f"{int(x):03d}" for x in all_predictions if x is not None]
+            else:
+                formatted_preds = [str(int(x)) for x in all_predictions if x is not None]
+            
+            counter = Counter(formatted_preds)
+            total = len(formatted_preds)
+            
+            rows = []
+            for val, count in counter.most_common(10):
+                rows.append({
+                    "result": val,
+                    "count": count,
+                    "%": round(count / total * 100, 2)
+                })
+                
+            return pl.DataFrame(rows)
+        except Exception as e:
+            logger.error(f"Failed to calculate ML stats for {product_name}: {e}")
+            return pl.DataFrame()
+
+    def _generate_top_ml_summary(self, product_ml_stats: dict) -> str:
+        """Generate a summary of top 10 highest probability ML predictions across products."""
+        summary_rows = []
+        
+        product_order = ["Power 6/55", "Power 6/45", "Max 3D Plus", "Max 3D Pro"]
+        
+        for name in product_order:
+            stats = product_ml_stats.get(name)
+            if stats is None or stats.is_empty():
+                continue
+            
+            top_10 = stats.head(10).to_dicts()
+            for i, row in enumerate(top_10):
+                summary_rows.append({
+                    "Rank": i + 1,
+                    "Product": name,
+                    "Number/Set": row["result"],
+                    "Probability (%)": row["%"]
+                })
+        
+        if not summary_rows:
+            return ""
+            
+        df_summary = pl.DataFrame(summary_rows)
+        md = df_to_markdown(df_summary)
+        
+        return f"""## 📈 Top Backtest Summary (Machine Learning)
+
+This table shows the top 10 numbers most frequently predicted by our ML models (Frequency & Pattern) during recent backtests.
 
 {md}
 """
@@ -522,13 +638,23 @@ This table shows the top 10 most frequent results (highest weights) for each maj
             "Max 3D Pro": self._calculate_3d_stats(df_3d_pro),
         }
 
+        # Calculate ML stats for top summary
+        logger.info("Calculating ML stats for summary tables...")
+        ml_stats_data = {
+            "Power 6/55": self._calculate_ml_stats(df_power655, "Power 6/55"),
+            "Power 6/45": self._calculate_ml_stats(df_power645, "Power 6/45"),
+            "Max 3D Plus": self._calculate_ml_stats(df_3d, "Max 3D Plus"),
+            "Max 3D Pro": self._calculate_ml_stats(df_3d_pro, "Max 3D Pro"),
+        }
+
         # Generate all sections
         header = self.templates.get_header()
         toc = self.templates.get_toc()
         data_overview = self._get_data_overview()
         
-        # Summary table
+        # Summary tables
         probability_summary = self._generate_top_probability_summary(stats_data)
+        ml_summary = self._generate_top_ml_summary(ml_stats_data)
         
         # New visualization
         visualization = self._generate_pair_matrix_plot(df_power655)
@@ -548,6 +674,8 @@ This table shows the top 10 most frequent results (highest weights) for each maj
 {toc}
 
 {probability_summary}
+
+{ml_summary}
 
 ## Predictions
 
