@@ -7,7 +7,7 @@ on:
     paths-ignore:
       - 'data/**'
       - 'README.md'
-      - '.github/workflows/vietlott-update.yml'
+      - '.github/workflows/crawl.yaml'
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages

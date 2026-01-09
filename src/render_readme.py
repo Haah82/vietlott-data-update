@@ -24,15 +24,15 @@ class ReadmeTemplates:
         """Get the main header with badges and description."""
         return """# 🎰 Vietlott Data
 
-[![GitHub Actions](https://github.com/vietvudanh/vietlott-data/workflows/crawl/badge.svg)](https://github.com/vietvudanh/vietlott-data/actions)
+[![GitHub Actions](https://github.com/haah82/vietlott-data-update/workflows/crawl/badge.svg)](https://github.com/haah82/vietlott-data-update/actions)
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Data Updated](https://img.shields.io/badge/data-daily%20updated-brightgreen.svg)](https://github.com/vietvudanh/vietlott-data/commits/main)
-[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Deployed-blue)](https://vietvudanh.github.io/vietlott-data/)
+[![Data Updated](https://img.shields.io/badge/data-daily%20updated-brightgreen.svg)](https://github.com/haah82/vietlott-data-update/commits/main)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Deployed-blue)](https://haah82.github.io/vietlott-data-update/)
 
-> 📊 **Automated Vietnamese Lottery Data Collection & Analysis**
+> 📊 **Thu thập và Tổng hợp Dữ liệu Vietlott Tự động nhằm mục đích học tập và giải trí**
 >
-> This project automatically crawls and analyzes Vietnamese lottery data from [vietlott.vn](https://vietlott.vn/), providing comprehensive statistics and insights for all major lottery products.
+> Dự án tự động thu thập và phân tích dữ liệu kết quả xổ số từ [vietlott.vn](https://vietlott.vn/), cung cấp thống kê chi tiết cho tất cả các sản phẩm.
 
 ## 🎯 Supported Lottery Products
 
@@ -129,7 +129,7 @@ vietlott-missing [OPTIONS] PRODUCT
 
 ```bash
 # Clone the repository
-git clone https://github.com/vietvudanh/vietlott-data.git ; cd vietlott-data
+git clone https://github.com/haah82/vietlott-data-update.git ; cd vietlott-data-update
 
 # Install dependencies (recommend using uv and virtual environment)
 uv sync --dev

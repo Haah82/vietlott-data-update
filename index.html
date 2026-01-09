@@ -24,7 +24,7 @@
         from pyodide.http import open_url
 
         url = ( 
-            "https://raw.githubusercontent.com/vietvudanh/vietlott-data/master/data/power655.jsonl"
+            "https://raw.githubusercontent.com/haah82/vietlott-data-update/main/data/power655.jsonl"
         )
         data_655 = pd.read_json(open_url(url), lines=True)
         data_655['date'] = pd.to_datetime(data_655['date']).dt.date

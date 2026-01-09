@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # commit to csv_data
 
-URL=https://github.com/vietvudanh/vietlott-data.git
+URL=https://github.com/haah82/vietlott-data-update.git
 FOLDER=vietlott-data
 DATA_FOLDER=data
 USER="Viet VU"
@@ -46,7 +46,7 @@ python src/render_readme.py
 #git pull
 
 # commit and push
-git remote add github git@github.com:vietvudanh/vietlott-data.git
+git remote add github git@github.com:haah82/vietlott-data-update.git
 git config user.name "\'$USER\'"
 git config user.email "\'$EMAIl\'"
 git status

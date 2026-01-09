@@ -12,7 +12,7 @@ The project is well-structured, with clear separation of concerns between data c
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/vietvudanh/vietlott-data.git
+    git clone https://github.com/haah82/vietlott-data-update.git
     cd vietlott-data
     ```
 

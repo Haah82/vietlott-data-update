@@ -28,8 +28,8 @@ readme = "README.md"
 license = { text = "MIT" }
 
 [project.urls]
-Homepage = "https://github.com/vietvudanh/vietlott-data"
-Issues = "https://github.com/vietvudanh/vietlott-data/issues"
+Homepage = "https://github.com/haah82/vietlott-data-update"
+Issues = "https://github.com/haah82/vietlott-data-update/issues"
 
 
 [project.optional-dependencies]

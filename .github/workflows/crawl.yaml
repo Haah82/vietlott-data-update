@@ -9,8 +9,8 @@ on:
       - main
     paths:
       - 'src/**'
-      - '.github/workflows/vietlott-update.yml'
-  workflow_dispatch: # Kích hoạt thủ công qua giao diện GitHub
+      - '.github/workflows/crawl.yaml'
+    workflow_dispatch: # Kích hoạt thủ công qua giao diện GitHub
 
 permissions:
   contents: write # Quyền bắt buộc để push dữ liệu vào branch main
