@@ -66,6 +66,9 @@ class ReadmeTemplates:
   - [📅 Recent Results](#-recent-results)
   - [🎲 Number Frequency (All Time)](#-number-frequency-all-time)
   - [📊 Frequency Analysis by Period](#-frequency-analysis-by-period)
+- [📈 Power 6/45 Analysis](#-power-645-analysis)
+  - [📅 Recent Results 6/45](#-recent-results-last-10-draws-645)
+  - [🎲 Number Frequency 6/45](#-number-frequency-all-time-645)
 - [⚙️ How It Works](#️-how-it-works)
 - [🚀 Installation & Usage](#-installation--usage)
 - [📄 License](#-license)
@@ -280,7 +283,7 @@ class ReadmeGenerator:
         stats = df_explode.group_by("result").agg(pl.count("id").alias("count"))
         total_count = df_explode.height
         stats = stats.with_columns(((pl.col("count") / total_count * 100).round(2)).alias("%"))
-        stats = stats.sort("result")
+        stats = stats.sort("count", descending=True)
         return stats
 
     def _get_data_overview(self) -> str:
@@ -311,10 +314,10 @@ class ReadmeGenerator:
             return df_to_markdown(df_stats)
         return "No data available"
 
-    def _generate_power655_analysis(self, df: pl.DataFrame) -> str:
-        """Generate detailed Power 6/55 analysis section."""
+    def _generate_power_analysis(self, df: pl.DataFrame, title: str, subtitle_suffix: str = "") -> str:
+        """Generate detailed Power analysis section."""
         if df.is_empty():
-            return "## 📈 Power 6/55 Analysis\n\n> No data available for analysis.\n"
+            return f"## {title}\n\n> No data available for analysis.\n"
 
         try:
             # Calculate stats for different periods
@@ -340,29 +343,29 @@ class ReadmeGenerator:
             stats_60d_md = df_to_markdown(stats_60d)
             stats_90d_md = df_to_markdown(stats_90d)
 
-            return f"""## 📈 Power 6/55 Analysis
+            return f"""## {title}
 
-### 📅 Recent Results (Last 10 draws)
+### 📅 Recent Results (Last 10 draws){subtitle_suffix}
 {recent_results_md}
 
-### 🎲 Number Frequency (All Time)
+### 🎲 Number Frequency (All Time){subtitle_suffix}
 {stats_all_md}
 
-### 📊 Frequency Analysis by Period
+### 📊 Frequency Analysis by Period{subtitle_suffix}
 
-#### Last 30 Days
+#### Last 30 Days{subtitle_suffix}
 {stats_30d_md}
 
-#### Last 60 Days
+#### Last 60 Days{subtitle_suffix}
 {stats_60d_md}
 
-#### Last 90 Days
+#### Last 90 Days{subtitle_suffix}
 {stats_90d_md}
 
 """
         except Exception as e:
-            logger.exception(f"Error generating Power 6/55 analysis: {e}")
-            return "## 📈 Power 6/55 Analysis\n\n> Error generating analysis.\n"
+            logger.exception(f"Error generating {title}: {e}")
+            return f"## {title}\n\n> Error generating analysis.\n"
 
     def _generate_pair_matrix_plot(self, df: pl.DataFrame, product_name: str = "Power 6/55") -> str:
         """Generate a heatmap of number pairs and save it as an image."""
@@ -418,8 +421,10 @@ class ReadmeGenerator:
         """Generate the complete README content."""
         logger.info("Starting README generation...")
 
-        # Load Power 6/55 data (main focus)
+        # Load Power 6/55 data
         df_power655 = self._load_lottery_data("power_655")
+        # Load Power 6/45 data
+        df_power645 = self._load_lottery_data("power_645")
 
         # Generate all sections
         header = self.templates.get_header()
@@ -429,7 +434,9 @@ class ReadmeGenerator:
         # New visualization
         visualization = self._generate_pair_matrix_plot(df_power655)
         
-        power655_analysis = self._generate_power655_analysis(df_power655)
+        power655_analysis = self._generate_power_analysis(df_power655, "📈 Power 6/55 Analysis")
+        power645_analysis = self._generate_power_analysis(df_power645, "📈 Power 6/45 Analysis", " (6/45)")
+        
         how_it_works = self.templates.get_how_it_works()
         install_section = self.templates.get_install_section()
 
@@ -449,6 +456,8 @@ Predicitons models are at [/src/predictions](./src/machine_learning/prediction_s
 {visualization}
 
 {power655_analysis}
+
+{power645_analysis}
 
 {how_it_works}
 
