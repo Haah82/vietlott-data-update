@@ -209,6 +209,11 @@ class PatternStrategy(PredictModel):
         Returns:
             List of predicted numbers
         """
+        if target_date is None or pd.isna(target_date):
+            # Fallback to random if no date provided or invalid date
+            all_numbers = list(range(self.min_val, self.max_val + 1))
+            return sorted(random.sample(all_numbers, self.number_predict))
+
         # Analyze patterns
         spacing_analysis = self._analyze_spacing_patterns(target_date)
         range_analysis = self._analyze_range_distribution(target_date)

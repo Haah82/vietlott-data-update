@@ -34,6 +34,11 @@ class BayesianInferenceStrategy(PredictModel):
         return history.add(all_nums, fill_value=0).sort_index()
 
     def predict(self, target_date: date) -> List[int]:
+        if target_date is None or pd.isna(target_date):
+            # Fallback to random if no date provided or invalid date
+            all_numbers = list(range(self.min_val, self.max_val + 1))
+            return sorted(random.sample(all_numbers, self.number_predict))
+
         counts = self._get_number_counts(target_date)
         
         # Bayesian Posterior (Dirichlet-Multinomial)
@@ -108,6 +113,11 @@ class PoissonGapStrategy(PredictModel):
         return scores
 
     def predict(self, target_date: date) -> List[int]:
+        if target_date is None or pd.isna(target_date):
+            # Fallback to random if no date provided or invalid date
+            all_numbers = list(range(self.min_val, self.max_val + 1))
+            return sorted(random.sample(all_numbers, self.number_predict))
+
         scores = self._analyze_gaps(target_date)
         
         # Sort by overdue score descending

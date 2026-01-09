@@ -124,6 +124,11 @@ class FrequencyStrategy(PredictModel):
         Returns:
             List of predicted numbers
         """
+        if target_date is None or pd.isna(target_date):
+            # Fallback to random if no date provided or invalid date
+            all_numbers = list(range(self.min_val, self.max_val + 1))
+            return sorted(random.sample(all_numbers, self.number_predict))
+
         frequency_data = self._get_frequency_data(target_date)
         predicted = []
 

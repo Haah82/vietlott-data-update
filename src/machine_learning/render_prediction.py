@@ -50,6 +50,12 @@ class PredictionSummaryGenerator:
                     logger.warning(f"Could not parse date column: {e}")
                     df = df.with_columns(pl.col("date").str.to_date(strict=False))
 
+            # Filter out rows with null dates or results
+            if "date" in df.columns:
+                df = df.filter(pl.col("date").is_not_null())
+            if "result" in df.columns:
+                df = df.filter(pl.col("result").is_not_null())
+
             df = df.sort(["date", "id"], descending=True)
             return df
         except Exception as e:
