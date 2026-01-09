@@ -69,6 +69,9 @@ class ReadmeTemplates:
 - [📈 Power 6/45 Analysis](#-power-645-analysis)
   - [📅 Recent Results 6/45](#-recent-results-last-10-draws-645)
   - [🎲 Number Frequency 6/45](#-number-frequency-all-time-645)
+- [📈 Max 3D Analysis](#-max-3d-analysis)
+- [📈 Max 3D Pro Analysis](#-max-3d-pro-analysis)
+- [🏆 Top Probability Summary](#-top-probability-summary)
 - [⚙️ How It Works](#️-how-it-works)
 - [🚀 Installation & Usage](#-installation--usage)
 - [📄 License](#-license)
@@ -286,6 +289,29 @@ class ReadmeGenerator:
         stats = stats.sort("count", descending=True)
         return stats
 
+    def _calculate_3d_stats(self, df: pl.DataFrame) -> pl.DataFrame:
+        """Calculate number frequency statistics for 3D games where result is a dict."""
+        if df.is_empty():
+            return pl.DataFrame()
+
+        # Extract all numbers from all prizes
+        all_numbers = []
+        for row in df.iter_rows(named=True):
+            res_dict = row["result"]
+            if isinstance(res_dict, dict):
+                for prize_nums in res_dict.values():
+                    if isinstance(prize_nums, list):
+                        all_numbers.extend(prize_nums)
+        
+        if not all_numbers:
+            return pl.DataFrame()
+            
+        stats_df = pl.Series("result", all_numbers).to_frame().group_by("result").agg(pl.count("result").alias("count"))
+        total_count = len(all_numbers)
+        stats_df = stats_df.with_columns(((pl.col("count") / total_count * 100).round(2)).alias("%"))
+        stats_df = stats_df.sort("count", descending=True)
+        return stats_df
+
     def _get_data_overview(self) -> str:
         """Generate overview statistics for all products."""
         products = ["power_655", "power_645", "power_535", "keno", "3d", "3d_pro", "bingo18"]
@@ -314,14 +340,17 @@ class ReadmeGenerator:
             return df_to_markdown(df_stats)
         return "No data available"
 
-    def _generate_power_analysis(self, df: pl.DataFrame, title: str, subtitle_suffix: str = "") -> str:
+    def _generate_power_analysis(self, df: pl.DataFrame, title: str, stats_all_orig: pl.DataFrame = None) -> str:
         """Generate detailed Power analysis section."""
         if df.is_empty():
             return f"## {title}\n\n> No data available for analysis.\n"
 
         try:
             # Calculate stats for different periods
-            stats_all = self._balance_long_df(self._calculate_stats(df))
+            if stats_all_orig is None:
+                stats_all_orig = self._calculate_stats(df)
+            
+            stats_all = self._balance_long_df(stats_all_orig)
 
             current_date = datetime.now().date()
             stats_30d = self._balance_long_df(
@@ -345,27 +374,85 @@ class ReadmeGenerator:
 
             return f"""## {title}
 
-### 📅 Recent Results (Last 10 draws){subtitle_suffix}
+### 📅 Recent Results (Last 10 draws)
 {recent_results_md}
 
-### 🎲 Number Frequency (All Time){subtitle_suffix}
+### 🎲 Number Frequency (All Time)
 {stats_all_md}
 
-### 📊 Frequency Analysis by Period{subtitle_suffix}
+### 📊 Frequency Analysis by Period
 
-#### Last 30 Days{subtitle_suffix}
+#### Last 30 Days
 {stats_30d_md}
 
-#### Last 60 Days{subtitle_suffix}
+#### Last 60 Days
 {stats_60d_md}
 
-#### Last 90 Days{subtitle_suffix}
+#### Last 90 Days
 {stats_90d_md}
-
 """
         except Exception as e:
             logger.exception(f"Error generating {title}: {e}")
             return f"## {title}\n\n> Error generating analysis.\n"
+
+    def _generate_3d_analysis(self, df: pl.DataFrame, title: str) -> str:
+        """Generate detailed 3D analysis section."""
+        if df.is_empty():
+            return f"## {title}\n\n> No data available for analysis.\n"
+
+        try:
+            stats_all = self._balance_long_df(self._calculate_3d_stats(df).head(100)) # Show top 100 for 3D
+            recent_results = df.head(10)
+            
+            # For 3D we need to format the result dict for display
+            recent_results_formatted = recent_results.with_columns(
+                pl.col("result").map_elements(lambda d: ", ".join(itertools.chain.from_iterable(d.values())), return_dtype=pl.Utf8)
+            )
+
+            recent_md = df_to_markdown(recent_results_formatted)
+            stats_md = df_to_markdown(stats_all)
+
+            return f"""## {title}
+
+### 📅 Recent Results (Last 10 draws)
+{recent_md}
+
+### 🎲 Top 3-Digit Number Frequency (All Time)
+{stats_md}
+"""
+        except Exception as e:
+            logger.exception(f"Error generating {title}: {e}")
+            return f"## {title}\n\n> Error generating analysis.\n"
+
+    def _generate_top_probability_summary(self, product_stats: dict) -> str:
+        """Generate a summary of top 10 highest probability numbers across products."""
+        summary_rows = []
+        
+        for name, stats in product_stats.items():
+            if stats.is_empty():
+                continue
+            
+            top_10 = stats.head(10).to_dicts()
+            for i, row in enumerate(top_10):
+                summary_rows.append({
+                    "Rank": i + 1,
+                    "Product": name,
+                    "Number/Set": row["result"],
+                    "Probability (%)": row["%"]
+                })
+        
+        if not summary_rows:
+            return ""
+            
+        df_summary = pl.DataFrame(summary_rows).sort(["Rank", "Product"])
+        md = df_to_markdown(df_summary)
+        
+        return f"""## 🏆 Top Probability Summary
+
+This table shows the top 10 most frequent results (highest weights) for each major product.
+
+{md}
+"""
 
     def _generate_pair_matrix_plot(self, df: pl.DataFrame, product_name: str = "Power 6/55") -> str:
         """Generate a heatmap of number pairs and save it as an image."""
@@ -421,21 +508,36 @@ class ReadmeGenerator:
         """Generate the complete README content."""
         logger.info("Starting README generation...")
 
-        # Load Power 6/55 data
+        # Load data
         df_power655 = self._load_lottery_data("power_655")
-        # Load Power 6/45 data
         df_power645 = self._load_lottery_data("power_645")
+        df_3d = self._load_lottery_data("3d")
+        df_3d_pro = self._load_lottery_data("3d_pro")
+
+        # Pre-calculate stats for summary
+        stats_data = {
+            "Power 6/55": self._calculate_stats(df_power655),
+            "Power 6/45": self._calculate_stats(df_power645),
+            "Max 3D Plus": self._calculate_3d_stats(df_3d),
+            "Max 3D Pro": self._calculate_3d_stats(df_3d_pro),
+        }
 
         # Generate all sections
         header = self.templates.get_header()
         toc = self.templates.get_toc()
         data_overview = self._get_data_overview()
         
+        # Summary table
+        probability_summary = self._generate_top_probability_summary(stats_data)
+        
         # New visualization
         visualization = self._generate_pair_matrix_plot(df_power655)
         
-        power655_analysis = self._generate_power_analysis(df_power655, "📈 Power 6/55 Analysis")
-        power645_analysis = self._generate_power_analysis(df_power645, "📈 Power 6/45 Analysis", " (6/45)")
+        power655_analysis = self._generate_power_analysis(df_power655, "📈 Power 6/55 Analysis", stats_data["Power 6/55"])
+        power645_analysis = self._generate_power_analysis(df_power645, "📈 Power 6/45 Analysis", stats_data["Power 6/45"])
+        
+        max3d_plus_analysis = self._generate_3d_analysis(df_3d, "📈 Max 3D Plus Analysis")
+        max3d_pro_analysis = self._generate_3d_analysis(df_3d_pro, "📈 Max 3D Pro Analysis")
         
         how_it_works = self.templates.get_how_it_works()
         install_section = self.templates.get_install_section()
@@ -445,9 +547,11 @@ class ReadmeGenerator:
 
 {toc}
 
+{probability_summary}
+
 ## Predictions
 
-Predicitons models are at [/src/predictions](./src/machine_learning/prediction_summary.md)
+Models and predictions are updated daily at [/src/predictions](./src/machine_learning/prediction_summary.md)
 
 ## 📊 Data Statistics
 
@@ -458,6 +562,10 @@ Predicitons models are at [/src/predictions](./src/machine_learning/prediction_s
 {power655_analysis}
 
 {power645_analysis}
+
+{max3d_plus_analysis}
+
+{max3d_pro_analysis}
 
 {how_it_works}
 
