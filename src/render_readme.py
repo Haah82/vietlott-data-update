@@ -18,6 +18,7 @@ import numpy as np
 import itertools
 from collections import Counter
 import pandas as pd
+import re
 
 matplotlib.use("Agg")  # For headless environments like GitHub Actions
 
@@ -64,8 +65,10 @@ class ReadmeTemplates:
         return """## 📋 Table of Contents
 
 - [🎯 Supported Lottery Products](#-supported-lottery-products)
-- [Predictions](#-predictions)
 - [📊 Data Statistics](#-data-statistics)
+- [🏆 Top Probability Summary](#-top-probability-summary)
+- [📈 Top Backtest Summary](#-top-backtest-summary-machine-learning)
+- [Predictions](#-predictions)
 - [📈 Power 6/55 Analysis](#-power-655-analysis)
   - [📅 Recent Results](#-recent-results)
   - [🎲 Number Frequency (All Time)](#-number-frequency-all-time)
@@ -75,8 +78,6 @@ class ReadmeTemplates:
   - [🎲 Number Frequency 6/45](#-number-frequency-all-time-645)
 - [📈 Max 3D Analysis](#-max-3d-analysis)
 - [📈 Max 3D Pro Analysis](#-max-3d-pro-analysis)
-- [🏆 Top Probability Summary](#-top-probability-summary)
-- [📈 Top Backtest Summary](#-top-backtest-summary-machine-learning)
 - [⚙️ How It Works](#️-how-it-works)
 - [🚀 Installation & Usage](#-installation--usage)
 - [📄 License](#-license)
@@ -317,8 +318,8 @@ class ReadmeGenerator:
         stats_df = stats_df.sort("count", descending=True)
         return stats_df
 
-    def _get_data_overview(self) -> str:
-        """Generate overview statistics for all products."""
+    def _get_data_overview(self) -> tuple:
+        """Generate overview statistics for all products. Returns (markdown, raw_stats)"""
         products = ["power_655", "power_645", "power_535", "keno", "3d", "3d_pro", "bingo18"]
         data_stats = []
 
@@ -326,9 +327,14 @@ class ReadmeGenerator:
             try:
                 df = self._load_lottery_data(product)
                 if not df.is_empty():
+                    product_display_name = product.replace("_", " ").title()
+                    # Keep "Power 655" style consistent
+                    if "Power" in product_display_name:
+                        product_display_name = product_display_name.replace(" ", " ")
+                    
                     data_stats.append(
                         {
-                            "Product": product.replace("_", " ").title(),
+                            "Product": product_display_name,
                             "Total Draws": df["date"].n_unique(),
                             "Start Date": str(df["date"].min()),
                             "End Date": str(df["date"].max()),
@@ -342,8 +348,67 @@ class ReadmeGenerator:
 
         if data_stats:
             df_stats = pl.DataFrame(data_stats)
-            return df_to_markdown(df_stats)
-        return "No data available"
+            return df_to_markdown(df_stats), data_stats
+        return "No data available", []
+
+    def _update_docs_index(self, data_stats: list) -> None:
+        """Update the static table in docs/index.html."""
+        index_path = Path(__file__).parent.parent / "docs" / "index.html"
+        if not index_path.exists():
+            logger.warning(f"Could not find docs/index.html at {index_path}")
+            return
+
+        try:
+            with open(index_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            # Prepare new rows for the HTML table
+            rows = []
+            for s in data_stats:
+                # Format numbers with commas
+                total_draws = f"{s['Total Draws']:,}"
+                total_records = f"{s['Total Records']:,}"
+                
+                row = f"""                                <tr>
+                                    <td><strong>{s['Product']}</strong></td>
+                                    <td>{total_draws}</td>
+                                    <td>{s['Start Date']}</td>
+                                    <td>{s['End Date']}</td>
+                                    <td>{total_records}</td>
+                                </tr>"""
+                rows.append(row)
+            
+            new_tbody_inner = "\n".join(rows)
+            new_tbody = f"                            <tbody>\n{new_tbody_inner}\n                            </tbody>"
+            
+            # Use markers to find the section
+            start_marker = '<!-- Data Statistics -->'
+            end_marker = '</section>'
+            
+            section_start = content.find(start_marker)
+            if section_start == -1:
+                logger.warning("Could not find Data Statistics marker in index.html")
+                return
+            
+            section_end = content.find(end_marker, section_start)
+            if section_end == -1:
+                logger.warning("Could not find end of section in index.html")
+                return
+            
+            section_content = content[section_start:section_end]
+            
+            # Replace the tbody within this section
+            tbody_pattern = re.compile(r'<tbody>.*?</tbody>', re.DOTALL)
+            new_section_content = tbody_pattern.sub(new_tbody, section_content)
+            
+            final_content = content[:section_start] + new_section_content + content[section_end:]
+            
+            with open(index_path, "w", encoding="utf-8") as f:
+                f.write(final_content)
+                
+            logger.info(f"Successfully updated docs/index.html static table with {len(data_stats)} products.")
+        except Exception as e:
+            logger.error(f"Error updating docs/index.html: {e}")
 
     def _generate_power_analysis(self, df: pl.DataFrame, title: str, stats_all_orig: pl.DataFrame = None) -> str:
         """Generate detailed Power analysis section."""
@@ -650,7 +715,7 @@ This table shows the top 10 numbers most frequently predicted by our ML models (
         # Generate all sections
         header = self.templates.get_header()
         toc = self.templates.get_toc()
-        data_overview = self._get_data_overview()
+        data_overview, raw_stats = self._get_data_overview()
         
         # Summary tables
         probability_summary = self._generate_top_probability_summary(stats_data)
@@ -673,6 +738,12 @@ This table shows the top 10 numbers most frequently predicted by our ML models (
 
 {toc}
 
+## 📊 Data Statistics
+
+{data_overview}
+
+{visualization}
+
 {probability_summary}
 
 {ml_summary}
@@ -680,12 +751,6 @@ This table shows the top 10 numbers most frequently predicted by our ML models (
 ## Predictions
 
 Models and predictions are updated daily at [/src/predictions](./src/machine_learning/prediction_summary.md)
-
-## 📊 Data Statistics
-
-{data_overview}
-
-{visualization}
 
 {power655_analysis}
 
@@ -700,20 +765,23 @@ Models and predictions are updated daily at [/src/predictions](./src/machine_lea
 {install_section}
 """
 
-        return readme_content
+        return readme_content, raw_stats
 
     def save_readme(self, output_path: Optional[Path] = None) -> None:
-        """Generate and save README to file."""
+        """Generate and save README and update docs/index.html."""
         if output_path is None:
             output_path = Path("./readme.md")
 
         try:
-            readme_content = self.generate_readme()
+            readme_content, raw_stats = self.generate_readme()
 
             with output_path.open("w", encoding="utf-8") as ofile:
                 ofile.write(readme_content)
 
             logger.info(f"README successfully written to {output_path.absolute()}")
+            
+            # Update docs/index.html
+            self._update_docs_index(raw_stats)
         except Exception as e:
             logger.error(f"Error saving README: {e}")
             raise

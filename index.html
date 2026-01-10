@@ -5,9 +5,7 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Vietlott data</title>
-
-    <div id="table"></div>
+    <title>Vietlott Data Analysis</title>
 
     <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
     <script defer src="https://pyscript.net/latest/pyscript.js"></script>
@@ -20,13 +18,48 @@
     <py-script>
         from datetime import datetime, timedelta
         import pandas as pd
+        import numpy as np
 
         from pyodide.http import open_url
 
-        url = ( 
-            "https://raw.githubusercontent.com/haah82/vietlott-data-update/main/data/power655.jsonl"
-        )
-        data_655 = pd.read_json(open_url(url), lines=True)
+        BASE_URL = "https://raw.githubusercontent.com/haah82/vietlott-data-update/main/data/"
+        PRODUCTS = {
+            "Power 6/55": "power655.jsonl",
+            "Power 6/45": "power645.jsonl",
+            "Power 5/35": "power535.jsonl",
+            "Keno": "keno.jsonl",
+            "Max 3D": "3d.jsonl",
+            "Max 3D Pro": "3d_pro.jsonl",
+            "Bingo18": "bingo18.jsonl"
+        }
+
+        def get_data_overview():
+            overview = []
+            for name, filename in PRODUCTS.items():
+                try:
+                    url = BASE_URL + filename
+                    df = pd.read_json(open_url(url), lines=True)
+                    if not df.empty:
+                        df['date'] = pd.to_datetime(df['date'])
+                        overview.append({
+                            "Product": name,
+                            "Total Draws": df['date'].nunique(),
+                            "Start Date": df['date'].min().strftime('%Y-%m-%d'),
+                            "End Date": df['date'].max().strftime('%Y-%m-%d'),
+                            "Total Records": df['id'].nunique(),
+                            "Latest ID": df['id'].max()
+                        })
+                except Exception as e:
+                    print(f"Error loading {name}: {e}")
+            return pd.DataFrame(overview)
+
+        # Display Data Statistics Overview
+        stats_overview = get_data_overview()
+        display(stats_overview, target='data_statistics')
+
+        # Detailed Power 6/55 Analysis (Original code)
+        url_655 = BASE_URL + "power655.jsonl"
+        data_655 = pd.read_json(open_url(url_655), lines=True)
         data_655['date'] = pd.to_datetime(data_655['date']).dt.date
         data_655 = data_655.sort_values(by=['date', 'id'], ascending=False)
 
@@ -62,15 +95,21 @@
     </py-repl>
 
     <div>
-        <h1>All time</h1>
+        <h1>📊 Thống kê dữ liệu / Data Statistics</h1>
+        <div id="data_statistics"></div>
+        
+        <hr>
+        <h1>📈 Power 6/55 Detailed Analysis</h1>
+        
+        <h2>All time</h2>
         <div id="stats_all_time"></div>
-        <h1>15d</h1>
+        <h2>15d</h2>
         <div id="stats_15d"></div>
-        <h1>30d</h1>
+        <h2>30d</h2>
         <div id="stats_30d"></div>
-        <h1>60d</h1>
+        <h2>60d</h2>
         <div id="stats_60d"></div>
-        <h1>90d</h1>
+        <h2>90d</h2>
         <div id="stats_90d"></div>
         
     </div>

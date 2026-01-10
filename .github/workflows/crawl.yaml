@@ -80,6 +80,7 @@ jobs:
           # Add all data, docs, and assets
           git add data/*.jsonl
           git add readme.md
+          git add docs/index.html
           git add src/machine_learning/prediction_summary.md
           git add assets/images/*.png
           
