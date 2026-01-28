@@ -7,10 +7,8 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'src/**'
-      - '.github/workflows/crawl.yaml'
-    workflow_dispatch: # Kích hoạt thủ công qua giao diện GitHub
+    # No paths restriction to ensure it runs on any relevant change or manual push
+  workflow_dispatch: # Kích hoạt thủ công qua giao diện GitHub
 
 permissions:
   contents: write # Quyền bắt buộc để push dữ liệu vào branch main
@@ -41,12 +39,12 @@ jobs:
 
       - name: Run Data Update Script
         run: |
-          set -e
           export PYTHONPATH=src
           # Danh sách sản phẩm Vietlott hỗ trợ theo cấu trúc repo
+          # Use || true to allow other products to crawl even if one fails
           for product in keno power_655 power_645 power_535 3d 3d_pro bingo18; do
             echo "--- Starting crawl for $product ---"
-            uv run python src/vietlott/cli/crawl.py "$product"
+            uv run python src/vietlott/cli/crawl.py "$product" || echo "Failed to crawl $product"
             echo "--- Finished crawl for $product ---"
           done
         env:
@@ -77,17 +75,21 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Add all data, docs, and assets
-          git add data/*.jsonl
-          git add readme.md
-          git add docs/index.html
-          git add src/machine_learning/prediction_summary.md
-          git add assets/images/*.png
+          # Check status first to see what changed
+          git status
+          
+          # Add all data, docs, and assets - using patterns that won't fail if files are missing
+          git add data/*.jsonl 2>/dev/null || echo "No jsonl files in data/"
+          git add readme.md 2>/dev/null || echo "readme.md not found"
+          git add docs/index.html 2>/dev/null || echo "docs/index.html not found"
+          git add src/machine_learning/prediction_summary.md 2>/dev/null || echo "prediction_summary.md not found"
+          git add assets/images/*.png 2>/dev/null || echo "No images in assets/images/"
           
           if git diff --staged --quiet; then
             echo "No changes in data or reports. Skipping push."
           else
             git commit -m "chore(auto): update data, readme and predictions $(date +'%Y-%m-%d')"
+            # Pull with rebase to handle concurrent updates
             git pull --rebase origin main
             git push origin main
           fi
