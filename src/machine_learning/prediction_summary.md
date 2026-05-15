@@ -1,6 +1,6 @@
 # 🔮 Vietlott Prediction Summary
 
-> **Generated**: 2026-05-14 13:28:30
+> **Generated**: 2026-05-15 13:33:05
 >
 > This document contains machine learning predictions for Vietnamese lottery data.
 > This is an experimental module for educational purposes only.
@@ -14,9 +14,9 @@
 #### Monte Carlo Analysis (100 sims x 50 draws)
 | Metric | Value |
 |--------|-------|
-| Mean Profit | 90,968,500.0 VND |
-| Prob. of Profit | 2.00% |
-| Std Deviation | 700,058,231.3870397 VND |
+| Mean Profit | -9,047,000.0 VND |
+| Prob. of Profit | 0.00% |
+| Std Deviation | 437,482.5710814089 VND |
 
 
 #### Configuration
@@ -40,31 +40,31 @@
 | Metric | Value |
 |--------|-------|
 | Total cost | 260,000,000 VND |
-| Total gain | 5,040,150,000 VND |
-| Net profit/loss | 4,780,150,000 VND |
-| ROI | 1838.52% |
+| Total gain | 5,046,350,000 VND |
+| Net profit/loss | 4,786,350,000 VND |
+| ROI | 1840.90% |
 
 #### Match Distribution
   - **5 matches**: 1 times
-  - **4 matches**: 27 times
-  - **3 matches**: 533 times
-  - **2 matches**: 3,584 times
-  - **1 matches**: 10,874 times
-  - **0 matches**: 10,981 times
+  - **4 matches**: 39 times
+  - **3 matches**: 537 times
+  - **2 matches**: 3,610 times
+  - **1 matches**: 10,761 times
+  - **0 matches**: 11,052 times
 
 #### Best Results (5+ matches)
-| date                | result                     | predicted               |   correct_num |
-|:--------------------|:---------------------------|:------------------------|--------------:|
-| 2022-03-17 00:00:00 | [1, 6, 12, 21, 37, 49, 53] | [49, 12, 37, 53, 6, 33] |             5 |
+| date                | result                      | predicted               |   correct_num |
+|:--------------------|:----------------------------|:------------------------|--------------:|
+| 2025-10-09 00:00:00 | [7, 11, 21, 22, 39, 42, 40] | [38, 7, 11, 21, 22, 42] |             5 |
 
 ### 🔥 Frequency (Hot)
 
 #### Monte Carlo Analysis (100 sims x 50 draws)
 | Metric | Value |
 |--------|-------|
-| Mean Profit | 90,955,000.0 VND |
-| Prob. of Profit | 2.00% |
-| Std Deviation | 699,949,446.4066674 VND |
+| Mean Profit | 40,964,500.0 VND |
+| Prob. of Profit | 1.00% |
+| Std Deviation | 497,467,299.14110935 VND |
 
 
 #### Configuration
@@ -88,31 +88,28 @@
 | Metric | Value |
 |--------|-------|
 | Total cost | 260,000,000 VND |
-| Total gain | 5,041,600,000 VND |
-| Net profit/loss | 4,781,600,000 VND |
-| ROI | 1839.08% |
+| Total gain | 41,750,000 VND |
+| Net profit/loss | -218,250,000 VND |
+| ROI | -83.94% |
 
 #### Match Distribution
-  - **5 matches**: 1 times
   - **4 matches**: 30 times
-  - **3 matches**: 532 times
-  - **2 matches**: 3,713 times
-  - **1 matches**: 10,697 times
-  - **0 matches**: 11,027 times
+  - **3 matches**: 535 times
+  - **2 matches**: 3,591 times
+  - **1 matches**: 10,792 times
+  - **0 matches**: 11,052 times
 
 #### Best Results (5+ matches)
-| date                | result                      | predicted               |   correct_num |
-|:--------------------|:----------------------------|:------------------------|--------------:|
-| 2022-06-14 00:00:00 | [2, 15, 26, 32, 35, 36, 16] | [2, 15, 16, 32, 36, 43] |             5 |
+No results with 5+ matches found.
 
 ### ❄️ Frequency (Cold)
 
 #### Monte Carlo Analysis (100 sims x 50 draws)
 | Metric | Value |
 |--------|-------|
-| Mean Profit | 40,881,000.0 VND |
-| Prob. of Profit | 1.00% |
-| Std Deviation | 497,515,866.9720997 VND |
+| Mean Profit | -9,069,000.0 VND |
+| Prob. of Profit | 0.00% |
+| Std Deviation | 392,987.2771477469 VND |
 
 
 #### Configuration
@@ -136,31 +133,28 @@
 | Metric | Value |
 |--------|-------|
 | Total cost | 260,000,000 VND |
-| Total gain | 5,045,200,000 VND |
-| Net profit/loss | 4,785,200,000 VND |
-| ROI | 1840.46% |
+| Total gain | 38,950,000 VND |
+| Net profit/loss | -221,050,000 VND |
+| ROI | -85.02% |
 
 #### Match Distribution
-  - **5 matches**: 1 times
-  - **4 matches**: 40 times
-  - **3 matches**: 504 times
-  - **2 matches**: 3,695 times
-  - **1 matches**: 10,833 times
-  - **0 matches**: 10,927 times
+  - **4 matches**: 22 times
+  - **3 matches**: 559 times
+  - **2 matches**: 3,705 times
+  - **1 matches**: 10,947 times
+  - **0 matches**: 10,767 times
 
 #### Best Results (5+ matches)
-| date                | result                      | predicted                |   correct_num |
-|:--------------------|:----------------------------|:-------------------------|--------------:|
-| 2021-10-21 00:00:00 | [3, 19, 32, 36, 41, 51, 35] | [29, 32, 35, 36, 41, 51] |             5 |
+No results with 5+ matches found.
 
 ### 🧩 Pattern Analysis
 
 #### Monte Carlo Analysis (100 sims x 50 draws)
 | Metric | Value |
 |--------|-------|
-| Mean Profit | 90,963,000.0 VND |
-| Prob. of Profit | 2.00% |
-| Std Deviation | 700,055,410.6504713 VND |
+| Mean Profit | 40,917,500.0 VND |
+| Prob. of Profit | 1.00% |
+| Std Deviation | 497,477,051.8513895 VND |
 
 
 #### Configuration
@@ -184,16 +178,16 @@
 | Metric | Value |
 |--------|-------|
 | Total cost | 260,000,000 VND |
-| Total gain | 54,450,000 VND |
-| Net profit/loss | -205,550,000 VND |
-| ROI | -79.06% |
+| Total gain | 43,300,000 VND |
+| Net profit/loss | -216,700,000 VND |
+| ROI | -83.35% |
 
 #### Match Distribution
-  - **4 matches**: 52 times
-  - **3 matches**: 569 times
-  - **2 matches**: 3,730 times
-  - **1 matches**: 10,792 times
-  - **0 matches**: 10,857 times
+  - **4 matches**: 30 times
+  - **3 matches**: 566 times
+  - **2 matches**: 3,684 times
+  - **1 matches**: 10,742 times
+  - **0 matches**: 10,978 times
 
 #### Best Results (5+ matches)
 No results with 5+ matches found.
@@ -203,9 +197,9 @@ No results with 5+ matches found.
 #### Monte Carlo Analysis (100 sims x 50 draws)
 | Metric | Value |
 |--------|-------|
-| Mean Profit | 90,923,500.0 VND |
+| Mean Profit | 90,925,500.0 VND |
 | Prob. of Profit | 2.00% |
-| Std Deviation | 700,032,477.5842546 VND |
+| Std Deviation | 699,935,789.5369761 VND |
 
 
 #### Configuration
@@ -229,32 +223,31 @@ No results with 5+ matches found.
 | Metric | Value |
 |--------|-------|
 | Total cost | 260,000,000 VND |
-| Total gain | 10,049,250,000 VND |
-| Net profit/loss | 9,789,250,000 VND |
-| ROI | 3765.10% |
+| Total gain | 5,044,450,000 VND |
+| Net profit/loss | 4,784,450,000 VND |
+| ROI | 1840.17% |
 
 #### Match Distribution
-  - **5 matches**: 2 times
-  - **4 matches**: 41 times
-  - **3 matches**: 575 times
-  - **2 matches**: 3,652 times
-  - **1 matches**: 10,734 times
-  - **0 matches**: 10,996 times
+  - **5 matches**: 1 times
+  - **4 matches**: 34 times
+  - **3 matches**: 549 times
+  - **2 matches**: 3,736 times
+  - **1 matches**: 10,643 times
+  - **0 matches**: 11,037 times
 
 #### Best Results (5+ matches)
-| date                | result                      | predicted               |   correct_num |
-|:--------------------|:----------------------------|:------------------------|--------------:|
-| 2025-06-19 00:00:00 | [3, 5, 9, 10, 16, 47, 34]   | [5, 9, 16, 33, 34, 47]  |             5 |
-| 2024-01-25 00:00:00 | [13, 17, 35, 38, 42, 48, 7] | [7, 13, 14, 17, 35, 38] |             5 |
+| date                | result                     | predicted               |   correct_num |
+|:--------------------|:---------------------------|:------------------------|--------------:|
+| 2025-11-29 00:00:00 | [4, 20, 24, 27, 40, 48, 9] | [4, 20, 24, 40, 42, 48] |             5 |
 
 ### ⏳ Poisson Gap (Overdue)
 
 #### Monte Carlo Analysis (100 sims x 50 draws)
 | Metric | Value |
 |--------|-------|
-| Mean Profit | -9,023,500.0 VND |
-| Prob. of Profit | 0.00% |
-| Std Deviation | 468,372.447951414 VND |
+| Mean Profit | 40,987,500.0 VND |
+| Prob. of Profit | 1.00% |
+| Std Deviation | 497,510,265.5410741 VND |
 
 
 #### Configuration
@@ -278,16 +271,16 @@ No results with 5+ matches found.
 | Metric | Value |
 |--------|-------|
 | Total cost | 260,000,000 VND |
-| Total gain | 38,100,000 VND |
-| Net profit/loss | -221,900,000 VND |
-| ROI | -85.35% |
+| Total gain | 43,950,000 VND |
+| Net profit/loss | -216,050,000 VND |
+| ROI | -83.10% |
 
 #### Match Distribution
-  - **4 matches**: 28 times
-  - **3 matches**: 482 times
-  - **2 matches**: 3,649 times
-  - **1 matches**: 10,533 times
-  - **0 matches**: 11,308 times
+  - **4 matches**: 38 times
+  - **3 matches**: 499 times
+  - **2 matches**: 3,534 times
+  - **1 matches**: 10,610 times
+  - **0 matches**: 11,319 times
 
 #### Best Results (5+ matches)
 No results with 5+ matches found.
